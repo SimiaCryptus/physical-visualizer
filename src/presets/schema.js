@@ -20,16 +20,19 @@ export function validate(def) {
   if (!SAFE_PATH.test(def.comp.shader ?? '')) errs.push(`comp.shader invalid: ${def.comp.shader}`);
   if (def.sim) {
     if (!SAFE_PATH.test(def.sim.shader ?? '')) errs.push(`sim.shader invalid: ${def.sim.shader}`);
-    if (def.sim.texSize && (def.sim.texSize & (def.sim.texSize - 1))) errs.push('sim.texSize must be a power of two');
+    if (def.sim.texSize && def.sim.texSize & (def.sim.texSize - 1))
+      errs.push('sim.texSize must be a power of two');
     def.requires.particles = true;
   }
   if (!['add', 'alpha'].includes(def.comp.blend)) errs.push('comp.blend must be add|alpha');
-  if (typeof def.warp.decay !== 'number' || def.warp.decay < 0.5 || def.warp.decay > 0.999) errs.push('warp.decay out of range');
+  if (typeof def.warp.decay !== 'number' || def.warp.decay < 0.5 || def.warp.decay > 0.999)
+    errs.push('warp.decay out of range');
   def.params ??= [];
   if (!Array.isArray(def.params) || def.params.length > 4) errs.push('max 4 params');
   for (const p of def.params) {
     if (!p || typeof p.name !== 'string') errs.push('param.name required');
-    if (p.bind != null && !/^[a-zA-Z_]\w*$/.test(p.bind)) errs.push(`param bind invalid: ${p.bind}`);
+    if (p.bind != null && !/^[a-zA-Z_]\w*$/.test(p.bind))
+      errs.push(`param bind invalid: ${p.bind}`);
     p.default = typeof p.default === 'number' ? Math.min(1, Math.max(0, p.default)) : 0.5;
   }
   return errs;

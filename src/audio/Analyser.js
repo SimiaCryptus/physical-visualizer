@@ -6,7 +6,10 @@ const PEAK_DECAY_DB_PER_S = 0.5;
 
 export class Analyser {
   constructor(ctx, node, rawNode, signals, { bands = 32 } = {}) {
-    this.ctx = ctx; this.node = node; this.raw = rawNode; this.S = signals;
+    this.ctx = ctx;
+    this.node = node;
+    this.raw = rawNode;
+    this.S = signals;
     const bins = node.frequencyBinCount;
     this.freq = new Uint8Array(bins);
     this.time = new Uint8Array(node.fftSize);
@@ -21,12 +24,14 @@ export class Analyser {
     this._buildTables(bins);
     this.peaks = { bass: 0.3, lowMid: 0.3, mid: 0.3, treb: 0.3, spec: 0.3 };
     this.energyAvg = 0;
-    for (const n of ['bass', 'lowMid', 'mid', 'treb', 'energy']) signals.define(n, { min: 0, max: 1, smooth: 0.03 });
+    for (const n of ['bass', 'lowMid', 'mid', 'treb', 'energy'])
+      signals.define(n, { min: 0, max: 1, smooth: 0.03 });
     signals.define('energyAvg', { min: 0, max: 1 });
   }
 
   _buildTables(bins) {
-    const fLo = 20, fHi = Math.min(16000, this.nyquist);
+    const fLo = 20,
+      fHi = Math.min(16000, this.nyquist);
     const binOf = (f) => Math.min(bins - 1, Math.max(0, Math.round(f / this.hzPerBin)));
     this.bandRanges = [];
     for (let i = 0; i < this.bandCount; i++) {
@@ -48,13 +53,13 @@ export class Analyser {
   _mean(a, b) {
     let s = 0;
     for (let i = a; i < b; i++) s += this.freq[i];
-    return s / (((b - a) || 1) * 255);
+    return s / ((b - a || 1) * 255);
   }
 
   /** Divide by a decaying peak-hold: quiet tracks still fill the screen. */
   _norm(name, v, dt) {
     const p = this.peaks;
-    p[name] = Math.max(v, p[name] * Math.pow(10, -PEAK_DECAY_DB_PER_S * dt / 20), 0.05);
+    p[name] = Math.max(v, p[name] * Math.pow(10, (-PEAK_DECAY_DB_PER_S * dt) / 20), 0.05);
     return Math.min(1, v / p[name]);
   }
 
@@ -76,7 +81,10 @@ export class Analyser {
     // RMS energy, short + long window
     const T = this.time;
     let sq = 0;
-    for (let i = 0; i < T.length; i++) { const v = (T[i] - 128) / 128; sq += v * v; }
+    for (let i = 0; i < T.length; i++) {
+      const v = (T[i] - 128) / 128;
+      sq += v * v;
+    }
     const rms = Math.sqrt(sq / T.length);
     this.energyAvg += (rms - this.energyAvg) * Math.min(1, dt / 3);
     S.set('energy', Math.min(1, rms * 2.5));
@@ -85,12 +93,16 @@ export class Analyser {
     // Data textures
     let mx = 1;
     for (let x = 0; x < 512; x++) mx = Math.max(mx, this.freq[this.specBin[x]]);
-    this.peaks.spec = Math.max(mx / 255, this.peaks.spec * Math.pow(10, -PEAK_DECAY_DB_PER_S * dt / 20), 0.1);
+    this.peaks.spec = Math.max(
+      mx / 255,
+      this.peaks.spec * Math.pow(10, (-PEAK_DECAY_DB_PER_S * dt) / 20),
+      0.1
+    );
     const g = 1 / this.peaks.spec;
     for (let x = 0; x < 512; x++) this.spectrum[x] = Math.min(255, this.freq[this.specBin[x]] * g);
     const step = T.length / 512;
     for (let x = 0; x < 512; x++) this.waveform[x] = T[(x * step) | 0];
-    this.history.copyWithin(256, 0, 256 * 63);        // scroll; row 0 is newest
+    this.history.copyWithin(256, 0, 256 * 63); // scroll; row 0 is newest
     for (let x = 0; x < 256; x++) this.history[x] = this.spectrum[x * 2];
   }
 }

@@ -35,13 +35,18 @@ async function boot() {
     if (action) {
       const b = document.createElement('button');
       b.textContent = action;
-      b.onclick = () => { toastEl.hidden = true; onAction?.(); };
+      b.onclick = () => {
+        toastEl.hidden = true;
+        onAction?.();
+      };
       toastEl.append(b);
     }
     clearTimeout(toastTimer);
     if (!action) toastTimer = setTimeout(() => (toastEl.hidden = true), 4000);
   });
-  events.on('live', (t) => { $('#live').textContent = t; });
+  events.on('live', (t) => {
+    $('#live').textContent = t;
+  });
 
   // ---- graphics ---------------------------------------------------------------
   const canvas = $('#vis');
@@ -52,7 +57,10 @@ async function boot() {
     fatal(`This browser cannot run the visualizer: ${e.message}`);
     return;
   }
-  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); events.emit('toast', 'GPU context lost — reload to continue.'); });
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    events.emit('toast', 'GPU context lost — reload to continue.');
+  });
 
   const presets = new PresetManager(renderer, signals, events, store);
   await presets.loadBuiltins();
@@ -68,9 +76,12 @@ async function boot() {
 
   // ---- initial preset ---------------------------------------------------------
   const query = new URLSearchParams(location.search);
-  const wanted = query.get('preset') || (await store.get('prefs', 'preset').catch(() => null)) ||
+  const wanted =
+    query.get('preset') ||
+    (await store.get('prefs', 'preset').catch(() => null)) ||
     (cap.reducedMotion ? 'oscilloscope' : 'plasma-storm');
-  if (wanted === 'random') await presets.random(); else await presets.select(wanted);
+  if (wanted === 'random') await presets.random();
+  else await presets.select(wanted);
   if (!presets.current) await presets.select(0);
 
   // ---- sources ----------------------------------------------------------------
@@ -112,7 +123,10 @@ async function boot() {
   events.on('track', (t) => {
     events.emit('live', `Now playing: ${t.title}`);
     if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: 'Physical Visualizer' });
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: t.title,
+        artist: 'Physical Visualizer',
+      });
       const ms = navigator.mediaSession;
       ms.setActionHandler('play', () => fileSource?.play());
       ms.setActionHandler('pause', () => fileSource?.pause());
@@ -121,13 +135,17 @@ async function boot() {
     }
   });
   events.on('track:play', () => wakeLock.request());
-  events.on('track:pause', () => { if (audio.source !== micSource) wakeLock.release(); });
+  events.on('track:pause', () => {
+    if (audio.source !== micSource) wakeLock.release();
+  });
 
   // Drag & drop / OS file handlers
   window.addEventListener('dragover', (e) => e.preventDefault());
   window.addEventListener('drop', (e) => {
     e.preventDefault();
-    const files = [...(e.dataTransfer?.files ?? [])].filter((f) => f.type.startsWith('audio/') || /\.(mp3|ogg|flac|m4a|wav)$/i.test(f.name));
+    const files = [...(e.dataTransfer?.files ?? [])].filter(
+      (f) => f.type.startsWith('audio/') || /\.(mp3|ogg|flac|m4a|wav)$/i.test(f.name)
+    );
     if (files.length) useFiles(files);
   });
   window.launchQueue?.setConsumer(async (params) => {
@@ -136,7 +154,10 @@ async function boot() {
   });
 
   // ---- physical interactions -------------------------------------------------
-  events.on('shake', () => { presets.random(); navigator.vibrate?.([12, 40, 18]); });
+  events.on('shake', () => {
+    presets.random();
+    navigator.vibrate?.([12, 40, 18]);
+  });
   events.on('gesture:swipe', (dir) => {
     if (dir === 'left') presets.next();
     else if (dir === 'right') presets.prev();
@@ -145,25 +166,44 @@ async function boot() {
   events.on('gesture:doubletap', () => presets.random());
   events.on('gesture:longpress', () => {
     const d = presets.current?.def;
-    if (d) events.emit('toast', `${d.name} — by ${d.author ?? 'unknown'} · warp ${d.warp.shader} · comp ${d.comp.shader}`);
+    if (d)
+      events.emit(
+        'toast',
+        `${d.name} — by ${d.author ?? 'unknown'} · warp ${d.warp.shader} · comp ${d.comp.shader}`
+      );
   });
-  events.on('gesture:pinch', (scale) => { renderer.feedbackBias = clamp(renderer.feedbackBias + (scale - 1) * 0.02, -0.08, 0.035); });
+  events.on('gesture:pinch', (scale) => {
+    renderer.feedbackBias = clamp(renderer.feedbackBias + (scale - 1) * 0.02, -0.08, 0.035);
+  });
   events.on('preset:change', (def) => events.emit('live', `Preset: ${def.name}`));
-  events.on('motion:mode', (m) => events.emit('toast', m.mode === 'virtual' ? `No motion sensors (${m.reason}) — drag the canvas to tilt.` : 'Motion sensors live. Tilt, shake, spin.'));
+  events.on('motion:mode', (m) =>
+    events.emit(
+      'toast',
+      m.mode === 'virtual'
+        ? `No motion sensors (${m.reason}) — drag the canvas to tilt.`
+        : 'Motion sensors live. Tilt, shake, spin.'
+    )
+  );
   events.on('motion:table', (flat) => $('#chrome').classList.toggle('hidden', flat));
 
   // ---- wake plate: the one trusted gesture -----------------------------------
   const plate = $('#wake');
   const wakeUp = async () => {
     plate.remove();
-    const motionPromise = motion.start();          // must be kicked off synchronously inside the gesture
+    const motionPromise = motion.start(); // must be kicked off synchronously inside the gesture
     await audio.wake();
     await motionPromise;
     if (query.get('src') === 'mic') useMic();
     else if (!fileSource) loadDemo();
   };
   plate.addEventListener('click', wakeUp, { once: true });
-  plate.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') wakeUp(); }, { once: true });
+  plate.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key === 'Enter' || e.key === ' ') wakeUp();
+    },
+    { once: true }
+  );
 
   // ---- main loop --------------------------------------------------------------
   const root = document.documentElement.style;
@@ -173,7 +213,12 @@ async function boot() {
     motion.update(dt);
     gestures.update(dt);
     signals.update(dt);
-    if (audio.analyser) renderer.textures.upload(audio.analyser.spectrum, audio.analyser.waveform, audio.analyser.history);
+    if (audio.analyser)
+      renderer.textures.upload(
+        audio.analyser.spectrum,
+        audio.analyser.waveform,
+        audio.analyser.history
+      );
     const frame = presets.frame(dt);
     if (frame) renderer.render(presets.current, dt, frame);
     controls.update(dt);
@@ -202,7 +247,11 @@ async function boot() {
         const w = reg.installing;
         w?.addEventListener('statechange', () => {
           if (w.state === 'installed' && navigator.serviceWorker.controller) {
-            events.emit('toast', { text: 'New version available.', action: 'Reload', onAction: () => w.postMessage({ type: 'SKIP_WAITING' }) });
+            events.emit('toast', {
+              text: 'New version available.',
+              action: 'Reload',
+              onAction: () => w.postMessage({ type: 'SKIP_WAITING' }),
+            });
           }
         });
       });
@@ -215,8 +264,13 @@ async function boot() {
 
 function fatal(msg) {
   const p = document.getElementById('wake');
-  if (p) { p.innerHTML = `<div class="plate-title">✖</div><p class="plate-warn">${msg}</p>`; p.onclick = null; }
-  else alert(msg);
+  if (p) {
+    p.innerHTML = `<div class="plate-title">✖</div><p class="plate-warn">${msg}</p>`;
+    p.onclick = null;
+  } else alert(msg);
 }
 
-boot().catch((e) => { console.error(e); fatal(e.message); });
+boot().catch((e) => {
+  console.error(e);
+  fatal(e.message);
+});

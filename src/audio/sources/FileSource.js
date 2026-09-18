@@ -7,7 +7,9 @@ export class FileSource extends ElementSource {
     el.setAttribute('playsinline', '');
     el.preload = 'auto';
     super(ctx, el, events);
-    this.queue = []; this.index = -1; this._url = null;
+    this.queue = [];
+    this.index = -1;
+    this._url = null;
     el.addEventListener('ended', () => this.next(true));
   }
 
@@ -32,9 +34,15 @@ export class FileSource extends ElementSource {
 
   next(auto = false) {
     if (!this.queue.length) return;
-    if (auto && this.queue.length === 1) { this.el.currentTime = 0; this.play(); return; }
+    if (auto && this.queue.length === 1) {
+      this.el.currentTime = 0;
+      this.play();
+      return;
+    }
     this.load(this.index + 1);
   }
 
-  prev() { this.load(this.index - 1); }
+  prev() {
+    this.load(this.index - 1);
+  }
 }

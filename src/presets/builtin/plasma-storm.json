@@ -3,7 +3,13 @@
   "name": "Plasma Storm",
   "author": "builtin",
   "version": 1,
-  "warp": { "shader": "warp/zoom-rotate.frag", "decay": 0.94, "zoom": 1.0, "rotate": 1.5, "drift": 1.0 },
+  "warp": {
+    "shader": "warp/zoom-rotate.frag",
+    "decay": 0.94,
+    "zoom": 1.0,
+    "rotate": 1.5,
+    "drift": 1.0
+  },
   "comp": { "shader": "comp/plasma.frag", "blend": "add" },
   "post": { "aberration": "jerk*0.01" },
   "params": [

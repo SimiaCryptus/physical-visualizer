@@ -23,16 +23,23 @@ export function evalExpr(expr, signals) {
 /** Loads, validates, compiles (lazily) and switches presets. */
 export class PresetManager {
   constructor(renderer, signals, events, store) {
-    this.renderer = renderer; this.S = signals; this.E = events; this.store = store;
-    this.defs = []; this.built = new Map();
-    this.current = null; this.index = -1;
+    this.renderer = renderer;
+    this.S = signals;
+    this.E = events;
+    this.store = store;
+    this.defs = [];
+    this.built = new Map();
+    this.current = null;
+    this.index = -1;
     this.params = new Float32Array(4);
     this.transition = 0;
   }
 
   async loadBuiltins() {
     const base = new URL('./builtin/', import.meta.url);
-    const results = await Promise.allSettled(BUILTIN.map((id) => fetch(new URL(`${id}.json`, base)).then((r) => r.json())));
+    const results = await Promise.allSettled(
+      BUILTIN.map((id) => fetch(new URL(`${id}.json`, base)).then((r) => r.json()))
+    );
     for (const r of results) {
       if (r.status === 'fulfilled') this.add(r.value);
       else console.warn('[presets] load failed', r.reason);
@@ -41,21 +48,28 @@ export class PresetManager {
 
   add(def) {
     const errs = validate(def);
-    if (errs.length) { console.warn('[presets] rejected', def?.id, errs); return false; }
-    if (def.requires.particles && !this.renderer.floatOK) def._unavailable = 'no float render targets';
+    if (errs.length) {
+      console.warn('[presets] rejected', def?.id, errs);
+      return false;
+    }
+    if (def.requires.particles && !this.renderer.floatOK)
+      def._unavailable = 'no float render targets';
     if (def.requires.webgl > 2) def._unavailable = 'needs newer WebGL';
     this.defs.push(def);
     return true;
   }
 
-  get available() { return this.defs.filter((d) => !d._unavailable); }
+  get available() {
+    return this.defs.filter((d) => !d._unavailable);
+  }
 
   async select(idOrIndex) {
     const list = this.available;
     if (!list.length) return;
-    const idx = typeof idOrIndex === 'number'
-      ? ((idOrIndex % list.length) + list.length) % list.length
-      : list.findIndex((d) => d.id === idOrIndex);
+    const idx =
+      typeof idOrIndex === 'number'
+        ? ((idOrIndex % list.length) + list.length) % list.length
+        : list.findIndex((d) => d.id === idOrIndex);
     if (idx < 0) return;
     const def = list[idx];
     let built = this.built.get(def.id);
@@ -77,13 +91,18 @@ export class PresetManager {
     this.store?.put('prefs', 'preset', def.id).catch(() => {});
   }
 
-  next() { return this.select(this.index + 1); }
-  prev() { return this.select(this.index - 1); }
+  next() {
+    return this.select(this.index + 1);
+  }
+  prev() {
+    return this.select(this.index - 1);
+  }
   random() {
     const n = this.available.length;
     if (n < 2) return this.select(0);
     let i;
-    do i = Math.floor(Math.random() * n); while (i === this.index);
+    do i = Math.floor(Math.random() * n);
+    while (i === this.index);
     return this.select(i);
   }
 

@@ -7,10 +7,12 @@ import { PostChain } from './PostChain.js';
 const SCALE_STEPS = [1.0, 0.85, 0.7, 0.5];
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-const WARP_HEADER = 'in vec2 v_uv;\nout vec4 fragColor;\nuniform vec4 u_warp; // decay, zoom, rotate, drift';
+const WARP_HEADER =
+  'in vec2 v_uv;\nout vec4 fragColor;\nuniform vec4 u_warp; // decay, zoom, rotate, drift';
 const COMP_HEADER = 'in vec2 v_uv;\nout vec4 fragColor;';
 const PARTICLE_FRAG_HEADER = 'in vec4 v_state;\nout vec4 fragColor;';
-const SIM_HEADER = 'in vec2 v_uv;\nout vec4 fragColor;\nuniform sampler2D u_particles;\nuniform int u_texSize;\nuniform vec4 u_motion; // gravityScale, shakeImpulse, shake, seed';
+const SIM_HEADER =
+  'in vec2 v_uv;\nout vec4 fragColor;\nuniform sampler2D u_particles;\nuniform int u_texSize;\nuniform vec4 u_motion; // gravityScale, shakeImpulse, shake, seed';
 const PARTICLE_VERT_BODY = `
 layout(location = 0) in float a_index;
 uniform sampler2D u_particles;
@@ -31,20 +33,34 @@ void main() {
  */
 export class Renderer {
   constructor(canvas, signals, cap) {
-    this.canvas = canvas; this.S = signals; this.cap = cap;
+    this.canvas = canvas;
+    this.S = signals;
+    this.cap = cap;
     this.scaleIdx = cap.tier === 'high' ? 0 : cap.tier === 'mid' ? 1 : 2;
     this.dprCap = cap.tier === 'low' ? 1.25 : 2;
-    this.width = 0; this.height = 0; this.dpr = 1;
-    this.time = 0; this.frame = 0; this.beats = 0;
+    this.width = 0;
+    this.height = 0;
+    this.dpr = 1;
+    this.time = 0;
+    this.frame = 0;
+    this.beats = 0;
     this.feedbackBias = 0;
     this._lastResize = 0;
-    this._ft = new Float32Array(30); this._fti = 0; this._slowSince = 0; this._fastSince = 0;
+    this._ft = new Float32Array(30);
+    this._fti = 0;
+    this._slowSince = 0;
+    this._fastSince = 0;
   }
 
   async init() {
     const gl = this.canvas.getContext('webgl2', {
-      antialias: false, alpha: false, depth: false, stencil: false,
-      premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance',
+      antialias: false,
+      alpha: false,
+      depth: false,
+      stencil: false,
+      premultipliedAlpha: false,
+      preserveDrawingBuffer: false,
+      powerPreference: 'high-performance',
     });
     if (!gl) throw new Error('WebGL2 is required (WebGL1 fallback is not implemented yet).');
     this.gl = gl;
@@ -58,18 +74,23 @@ export class Renderer {
     return this;
   }
 
-  get renderScale() { return SCALE_STEPS[this.scaleIdx]; }
+  get renderScale() {
+    return SCALE_STEPS[this.scaleIdx];
+  }
 
   resize(force = false) {
     const now = performance.now();
-    if (!force && now - this._lastResize < 500) return;          // FBO realloc is costly
+    if (!force && now - this._lastResize < 500) return; // FBO realloc is costly
     const dpr = Math.min(window.devicePixelRatio || 1, this.dprCap) * this.renderScale;
     const w = Math.max(1, Math.round(this.canvas.clientWidth * dpr));
     const h = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
     if (w === this.width && h === this.height) return;
     this._lastResize = now;
-    this.width = w; this.height = h; this.dpr = dpr;
-    this.canvas.width = w; this.canvas.height = h;
+    this.width = w;
+    this.height = h;
+    this.dpr = dpr;
+    this.canvas.width = w;
+    this.canvas.height = h;
     this.comp?.dispose();
     this.comp = new PingPong(this.gl, w, h, { filter: this.gl.LINEAR });
     this.comp.clear();
@@ -87,11 +108,19 @@ export class Renderer {
     if (m > 20) {
       this._fastSince = 0;
       if (!this._slowSince) this._slowSince = now;
-      else if (now - this._slowSince > 1000 && this.scaleIdx < SCALE_STEPS.length - 1) { this.scaleIdx++; this._slowSince = 0; this.resize(true); }
+      else if (now - this._slowSince > 1000 && this.scaleIdx < SCALE_STEPS.length - 1) {
+        this.scaleIdx++;
+        this._slowSince = 0;
+        this.resize(true);
+      }
     } else if (m < 12) {
       this._slowSince = 0;
       if (!this._fastSince) this._fastSince = now;
-      else if (now - this._fastSince > 4000 && this.scaleIdx > 0) { this.scaleIdx--; this._fastSince = 0; this.resize(true); }
+      else if (now - this._fastSince > 4000 && this.scaleIdx > 0) {
+        this.scaleIdx--;
+        this._fastSince = 0;
+        this.resize(true);
+      }
     } else {
       this._slowSince = this._fastSince = 0;
     }
@@ -99,34 +128,56 @@ export class Renderer {
 
   /** Compile a validated preset definition into GPU programs + sim state. */
   async buildPreset(def) {
-    const gl = this.gl, common = this.common;
+    const gl = this.gl,
+      common = this.common;
     const [warpSrc, compSrc, simSrc] = await Promise.all([
       this.loader.load(def.warp.shader),
       this.loader.load(def.comp.shader),
       def.sim ? this.loader.load(def.sim.shader) : null,
     ]);
     const built = { def, warp: null, comp: null, sim: null };
-    built.warp = new Program(gl, FULLSCREEN_VERT, assemble({ common, header: WARP_HEADER, body: warpSrc }), `${def.id}:warp`);
+    built.warp = new Program(
+      gl,
+      FULLSCREEN_VERT,
+      assemble({ common, header: WARP_HEADER, body: warpSrc }),
+      `${def.id}:warp`
+    );
     if (def.sim) {
       if (!this.floatOK) throw new Error('needs float render targets (EXT_color_buffer_float)');
       const texSize = Math.min(def.sim.texSize ?? 128, this.cap.particleTexSize);
       built.sim = {
-        texSize, count: texSize * texSize,
-        program: new Program(gl, FULLSCREEN_VERT, assemble({ common, header: SIM_HEADER, body: simSrc }), `${def.id}:sim`),
+        texSize,
+        count: texSize * texSize,
+        program: new Program(
+          gl,
+          FULLSCREEN_VERT,
+          assemble({ common, header: SIM_HEADER, body: simSrc }),
+          `${def.id}:sim`
+        ),
         state: this._makeParticleState(texSize),
       };
-      built.comp = new Program(gl,
+      built.comp = new Program(
+        gl,
         assemble({ common, body: PARTICLE_VERT_BODY }),
-        assemble({ common, header: PARTICLE_FRAG_HEADER, body: compSrc }), `${def.id}:comp`);
+        assemble({ common, header: PARTICLE_FRAG_HEADER, body: compSrc }),
+        `${def.id}:comp`
+      );
     } else {
-      built.comp = new Program(gl, FULLSCREEN_VERT, assemble({ common, header: COMP_HEADER, body: compSrc }), `${def.id}:comp`);
+      built.comp = new Program(
+        gl,
+        FULLSCREEN_VERT,
+        assemble({ common, header: COMP_HEADER, body: compSrc }),
+        `${def.id}:comp`
+      );
     }
     return built;
   }
 
   disposePreset(built) {
-    built.warp?.dispose(); built.comp?.dispose();
-    built.sim?.program.dispose(); built.sim?.state.dispose();
+    built.warp?.dispose();
+    built.comp?.dispose();
+    built.sim?.program.dispose();
+    built.sim?.state.dispose();
   }
 
   _makeParticleState(n) {
@@ -138,7 +189,13 @@ export class Renderer {
       data[i * 4 + 3] = (Math.random() - 0.5) * 0.2;
     }
     const gl = this.gl;
-    return new PingPong(gl, n, n, { internal: gl.RGBA16F, format: gl.RGBA, type: gl.FLOAT, filter: gl.NEAREST, data });
+    return new PingPong(gl, n, n, {
+      internal: gl.RGBA16F,
+      format: gl.RGBA,
+      type: gl.FLOAT,
+      filter: gl.NEAREST,
+      data,
+    });
   }
 
   _contract(dt, params) {
@@ -172,8 +229,11 @@ export class Renderer {
    * @param frame   { params: Float32Array(4), aberration: number, shatter: 0..1 }
    */
   render(built, dt, frame) {
-    const gl = this.gl, S = this.S, def = built.def;
-    this.time += dt; this.frame++;
+    const gl = this.gl,
+      S = this.S,
+      def = built.def;
+    this.time += dt;
+    this.frame++;
     this.beats += (S.get('bpm') / 60) * dt;
     this._govern(dt);
     this.resize();
@@ -188,7 +248,12 @@ export class Renderer {
       this._apply(p, u);
       p.texture('u_particles', s.state.read.tex, 6);
       p.set('u_texSize', s.texSize);
-      p.set('u_motion', [def.motion.gravityScale, def.motion.shakeImpulse, S.get('shake'), Math.random()]);
+      p.set('u_motion', [
+        def.motion.gravityScale,
+        def.motion.shakeImpulse,
+        S.get('shake'),
+        Math.random(),
+      ]);
       this.mesh.drawFullscreen();
       s.state.swap();
     }

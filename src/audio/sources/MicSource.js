@@ -15,8 +15,16 @@ export class MicSource {
     this.title = 'Microphone';
   }
 
-  connect(dst) { this.node.connect(dst); }
-  disconnect() { this.node.disconnect(); }
-  get playing() { return true; }
-  stop() { this.stream.getTracks().forEach((t) => t.stop()); }
+  connect(dst) {
+    this.node.connect(dst);
+  }
+  disconnect() {
+    this.node.disconnect();
+  }
+  get playing() {
+    return true;
+  }
+  stop() {
+    this.stream.getTracks().forEach((t) => t.stop());
+  }
 }

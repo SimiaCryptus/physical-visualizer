@@ -1,6 +1,6 @@
 # Physical Visualizer
 
-*A music visualizer you can hold in your hand — and tilt, shake, and set down.*
+_A music visualizer you can hold in your hand — and tilt, shake, and set down._
 
 ---
 
@@ -28,12 +28,12 @@ playlist window. It looks like a relic. It is driven by very modern machinery.
 
 In 1997, a small program called Winamp changed how a generation listened to
 music on computers. Its most beloved feature wasn't the playback — it was the
-*visualizers*: plug-ins that took the sound coming out of your speakers and drew
+_visualizers_: plug-ins that took the sound coming out of your speakers and drew
 something hypnotic to go with it. The most famous, Milkdrop, worked by feeding
 each frame back into the next with a slight zoom, twist, and fade. The result was
 an endlessly evolving bloom of colour that seemed to breathe with the music.
 
-Winamp was also *skinnable*. People drew their own control panels — brushed metal,
+Winamp was also _skinnable_. People drew their own control panels — brushed metal,
 alien spacecraft, cartoon characters — and shared them by the thousands. A skin
 was a small zip file, and dropping one onto the player instantly re-dressed the
 whole thing.
@@ -52,17 +52,17 @@ Physical Visualizer is what happens when you put those ideas together.
 
 **Sound and motion are both just signals, so they can drive the same picture.**
 
-Traditional visualizers listen to music and draw. This one listens to music *and*
+Traditional visualizers listen to music and draw. This one listens to music _and_
 to the physical state of the device — how it is tilted, how hard it was just
 moved, whether it is lying flat on a table — and treats all of it as equal
 input. Gravity is a real force in the simulation. Bass is a real force in the
 simulation. They push on the same particles.
 
-This is why tilting doesn't merely swing the "camera" around. In the *Gravity
-Well* scene, thousands of sparks fall toward whichever edge of the phone is
-lowest, pile up, and then get kicked into the air by each drum hit. In *Liquid
-Sand*, tilting biases the flow of a two-dimensional fluid while the bass line
-injects turbulence at the center. In *Tunnel of Love*, tilt steers you down a
+This is why tilting doesn't merely swing the "camera" around. In the _Gravity
+Well_ scene, thousands of sparks fall toward whichever edge of the phone is
+lowest, pile up, and then get kicked into the air by each drum hit. In _Liquid
+Sand_, tilting biases the flow of a two-dimensional fluid while the bass line
+injects turbulence at the center. In _Tunnel of Love_, tilt steers you down a
 neon corridor and a quick twist of the wrist rolls the horizon.
 
 Even the retro control panel takes part: the windows float a few pixels above the
@@ -93,16 +93,16 @@ project.
 
 **Playing with it.**
 
-| Do this               | And this happens                                                    |
-|-----------------------|---------------------------------------------------------------------|
-| Tilt the phone        | Particles, fluids and tunnels respond to "down"                     |
-| Shake it              | The current scene shatters into the next one, with a small buzz     |
-| Swipe left / right    | Previous / next scene                                               |
-| Swipe up              | Fullscreen                                                          |
-| Pinch                 | Strengthen or soften the feedback trails                            |
-| Press and hold        | See the name and details of the current scene                       |
-| Lay it flat on a table| After a few seconds the controls fade and it becomes a lava lamp    |
-| Pick it back up       | The controls return                                                 |
+| Do this                | And this happens                                                 |
+| ---------------------- | ---------------------------------------------------------------- |
+| Tilt the phone         | Particles, fluids and tunnels respond to "down"                  |
+| Shake it               | The current scene shatters into the next one, with a small buzz  |
+| Swipe left / right     | Previous / next scene                                            |
+| Swipe up               | Fullscreen                                                       |
+| Pinch                  | Strengthen or soften the feedback trails                         |
+| Press and hold         | See the name and details of the current scene                    |
+| Lay it flat on a table | After a few seconds the controls fade and it becomes a lava lamp |
+| Pick it back up        | The controls return                                              |
 
 If your phone won't share its motion sensors (or you're on a desktop), nothing
 breaks: dragging a finger across the screen acts as a virtual tilt, springing
@@ -143,7 +143,7 @@ twenty-five years ago. Those files still work. That feels worth honouring.
 The app constantly measures how bright the screen is and how quickly that
 brightness changes. If it detects too many hard flashes in a short window, it
 smooths the picture for a couple of seconds. Scenes cannot switch this off; they
-can only be *gentler* than the limit. If your system is set to "reduce motion",
+can only be _gentler_ than the limit. If your system is set to "reduce motion",
 the app starts on a calm scene with camera shake and parallax disabled.
 
 **It looks after your battery.** It measures its own frame rate and quietly
@@ -192,7 +192,7 @@ The core experience — audio analysis, beat detection, the feedback-driven
 scenes, motion sensing, the gravity and tunnel scenes, offline installation, and
 the safety guard — works. The faithful skinned control panel is the largest piece
 still being finished; in the meantime a simpler set of buttons stands in for it.
-A few scenes (notably *Liquid Sand*) and some polish such as bloom lighting are
+A few scenes (notably _Liquid Sand_) and some polish such as bloom lighting are
 still on the way.
 
 It is a work in progress in the way a good hobby is a work in progress: usable

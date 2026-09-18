@@ -1,7 +1,7 @@
 # Physical Visualizer
 
 > A Winamp-esque, skinnable, GPU-driven music visualizer that reacts to **what you hear**
-> *and* **how you move**. Runs entirely in a mobile browser, installs as a PWA, works offline.
+> _and_ **how you move**. Runs entirely in a mobile browser, installs as a PWA, works offline.
 
 ---
 
@@ -19,15 +19,15 @@ Service Worker/PWA.
 
 ## 2. Goals
 
-| #  | Goal                          | Success criterion                                                          |
-|----|-------------------------------|----------------------------------------------------------------------------|
-| G1 | Audio-reactive rendering      | Visible latency between transient and pixel < 40ms                         |
-| G2 | Physically-reactive rendering | Tilt/shake affects simulation state, not just camera                       |
-| G3 | Mobile-first performance      | 60fps on a 3-year-old mid-range Android at 0.75x scale                     |
-| G4 | Zero-install, offline capable | Full functionality after first load with network disabled                  |
-| G5 | Nostalgic, skinnable UI       | Loads classic `.wsz` skin archives; UI is diegetic, not a toolbar          |
-| G6 | No build step required        | `python -m http.server` in the project root is a valid dev loop            |
-| G7 | Extensible presets            | A preset is a JSON descriptor + GLSL; addable without touching engine code |
+| #   | Goal                          | Success criterion                                                          |
+| --- | ----------------------------- | -------------------------------------------------------------------------- |
+| G1  | Audio-reactive rendering      | Visible latency between transient and pixel < 40ms                         |
+| G2  | Physically-reactive rendering | Tilt/shake affects simulation state, not just camera                       |
+| G3  | Mobile-first performance      | 60fps on a 3-year-old mid-range Android at 0.75x scale                     |
+| G4  | Zero-install, offline capable | Full functionality after first load with network disabled                  |
+| G5  | Nostalgic, skinnable UI       | Loads classic `.wsz` skin archives; UI is diegetic, not a toolbar          |
+| G6  | No build step required        | `python -m http.server` in the project root is a valid dev loop            |
+| G7  | Extensible presets            | A preset is a JSON descriptor + GLSL; addable without touching engine code |
 
 ### Non-Goals (v1)
 
@@ -44,7 +44,7 @@ Service Worker/PWA.
    drives. Gravity is a real force in the particle solver.
 2. **Everything is a signal.** Audio bands, accelerometer axes, gyro rates, touch pressure, time, and battery level all
    normalize into a single `SignalBus` of named floats in
-   `[-1, 1]` or `[0, 1]`. Presets bind to signal *names*, not sources.
+   `[-1, 1]` or `[0, 1]`. Presets bind to signal _names_, not sources.
 3. **Frames are cheap, state is precious.** Feedback buffers (ping-pong FBOs) persist across frames; each frame is a
    small perturbation of the last. This is what makes it look like Milkdrop and not a bar chart.
 4. **Graceful degradation, aggressively.** No gyro? Use touch-drag as virtual tilt. No WebGL2? Fall back to WebGL1 +
@@ -161,7 +161,7 @@ Service Worker/PWA.
                 <canvas id="vis">
                      ▼
             Winamp chrome overlay (DOM, skin sprites)
-  ```
+```
 
 Key rule: **the render loop never blocks on I/O**. Audio and motion write into double-buffered plain-object snapshots;
 `requestAnimationFrame` reads the latest snapshot.
@@ -189,7 +189,7 @@ Fold 1024 linear bins into **N log-spaced bands** (default 32) using precomputed
 headline signals:
 
 | Signal      | Range         | Derivation                                                        |
-|-------------|---------------|-------------------------------------------------------------------|
+| ----------- | ------------- | ----------------------------------------------------------------- |
 | `bass`      | 20–160 Hz     | mean band energy, normalized by rolling max                       |
 | `lowMid`    | 160–600 Hz    | "                                                                 |
 | `mid`       | 600–2.5 kHz   | "                                                                 |
@@ -213,7 +213,7 @@ dB/s, rises instantly.
 - iOS Safari: an `<audio>` element source requires `crossOrigin="anonymous"` for remote files or the analyser reads
   silence; local `File` → `createObjectURL` is safest.
 - Mic input (`getUserMedia({audio:{echoCancellation:false, autoGainControl:false,
-  noiseSuppression:false}})`) — these constraints matter or the spectrum gets mangled.
+noiseSuppression:false}})`) — these constraints matter or the spectrum gets mangled.
 - "Play what's on my phone" is not possible; document it, offer file picker + drag/drop + `showOpenFilePicker` where
   available.
 - Silent switch on iOS mutes `<audio>` unless the context is created with
@@ -226,15 +226,15 @@ dB/s, rises instantly.
 ### 7.1 Permission Flow
 
 ```js
-  // must be called from a click/touch handler
+// must be called from a click/touch handler
 async function requestMotion() {
-    const needsPrompt = typeof DeviceMotionEvent?.requestPermission === 'function';
-    if (!needsPrompt) return 'granted';          // Android / older iOS
-    try {
-        return await DeviceMotionEvent.requestPermission();
-    } catch {
-        return 'denied';
-    }                   // requires https + user gesture
+  const needsPrompt = typeof DeviceMotionEvent?.requestPermission === 'function';
+  if (!needsPrompt) return 'granted'; // Android / older iOS
+  try {
+    return await DeviceMotionEvent.requestPermission();
+  } catch {
+    return 'denied';
+  } // requires https + user gesture
 }
 ```
 
@@ -244,7 +244,7 @@ with spring-return.
 ### 7.2 Signals
 
 | Signal           | Source                                                   | Notes                                                    |
-|------------------|----------------------------------------------------------|----------------------------------------------------------|
+| ---------------- | -------------------------------------------------------- | -------------------------------------------------------- |
 | `tiltX`, `tiltY` | `deviceorientation` beta/gamma → clamped ±45° → `[-1,1]` | screen-orientation corrected                             |
 | `yaw`            | alpha (or webkitCompassHeading)                          | unreliable; used only for slow drift                     |
 | `gravX/Y/Z`      | `accelerationIncludingGravity`, low-passed α=0.9         | the "which way is down" vector                           |
@@ -280,7 +280,7 @@ accelerometer alone jitters under music-induced table vibration (real problem �
 
 ### 8.1 Passes
 
-1. **Sim pass** *(optional per preset)* — renders into a floating-point (or RGBA8-packed)
+1. **Sim pass** _(optional per preset)_ — renders into a floating-point (or RGBA8-packed)
    FBO holding particle `xy/vel` in texels. `N = 64×64 … 256×256` particles by tier.
 2. **Warp / feedback pass** — the Milkdrop heart. Sample the previous composite with a per-pixel distortion (zoom,
    rotate, warp, drift), multiply by `decay ≈ 0.96`, then additively draw this frame's geometry on top. Ping-pong two
@@ -317,7 +317,7 @@ referencing `u_tilt` — no engine changes.
 ### 8.3 Preset Format
 
 ```json
-  {
+{
   "id": "gravity-well",
   "name": "Gravity Well",
   "author": "you",
@@ -399,7 +399,7 @@ referencing `u_tilt` — no engine changes.
 - Parses `main.bmp`, `cbuttons.bmp`, `titlebar.bmp`, `viscolor.txt`, `pledit.txt`,
   `region.txt`; slices into an `ImageBitmap` atlas; exposes CSS custom properties (`--skin-main: url(blob:…)` +
   background-position sprites).
-- `viscolor.txt` (24 colors) is uploaded as a 24×1 palette texture so *presets* can optionally adopt the skin's palette.
+- `viscolor.txt` (24 colors) is uploaded as a 24×1 palette texture so _presets_ can optionally adopt the skin's palette.
   Nice touch: the whole GL scene recolors when you change skins.
 - Ships with one CC-licensed base skin; drag-and-drop any `.wsz` to load; stored in IndexedDB.
 
@@ -420,7 +420,7 @@ referencing `u_tilt` — no engine changes.
 ### `manifest.webmanifest`
 
 ```json
-  {
+{
   "name": "Physical Visualizer",
   "short_name": "PhysViz",
   "display": "fullscreen",
@@ -428,20 +428,12 @@ referencing `u_tilt` — no engine changes.
   "background_color": "#000000",
   "theme_color": "#1e1e2e",
   "start_url": "./index.html",
-  "icons": [
-    "…192, 512, maskable…"
-  ],
+  "icons": ["…192, 512, maskable…"],
   "file_handlers": [
     {
       "action": "./index.html?open",
       "accept": {
-        "audio/*": [
-          ".mp3",
-          ".ogg",
-          ".flac",
-          ".m4a",
-          ".wav"
-        ]
+        "audio/*": [".mp3", ".ogg", ".flac", ".m4a", ".wav"]
       }
     }
   ],
@@ -453,9 +445,7 @@ referencing `u_tilt` — no engine changes.
       "files": [
         {
           "name": "audio",
-          "accept": [
-            "audio/*"
-          ]
+          "accept": ["audio/*"]
         }
       ]
     }
@@ -487,7 +477,7 @@ referencing `u_tilt` — no engine changes.
 ### Other Platform APIs
 
 | API                                      | Use                                  | Fallback                          |
-|------------------------------------------|--------------------------------------|-----------------------------------|
+| ---------------------------------------- | ------------------------------------ | --------------------------------- |
 | Screen Wake Lock                         | keep display on while playing        | `<video>` loop hack, or just warn |
 | Media Session                            | lock-screen artwork + transport      | none                              |
 | Vibration                                | beat haptics (opt-in), shake confirm | none                              |
@@ -505,7 +495,7 @@ referencing `u_tilt` — no engine changes.
   parallax. A visible toggle can override, once, behind a confirm.
 - **Photosensitive epilepsy guard (always on):** the compositor tracks mean luminance per frame; more than 3 luminance
   transitions > 20% within any 1s window triggers a temporal low-pass (blend factor clamped) for the next 2s. Presets
-  cannot opt out; they can only be *less* flashy than the cap.
+  cannot opt out; they can only be _less_ flashy than the cap.
 - Red-flash specific limit: saturated red delta capped harder (per WCAG 2.3.1 spirit).
 - All chrome buttons are real `<button>`s with `aria-label`s positioned over sprites; full keyboard operation
   (space/arrow/`z x c v b` classic Winamp keys) on desktop.
@@ -522,7 +512,7 @@ no-build-step dev flow.
 
 **Phase 1 — Audio (1–2 days)**
 AudioEngine + FileSource + Analyser + band folding + BeatDetector. Debug HUD showing every signal as a live sparkline.
-*This HUD stays forever, toggled with `~`.*
+_This HUD stays forever, toggled with `~`._
 
 **Phase 2 — GL Core (2 days)**
 Renderer, Program w/ `#include`, Framebuffer ping-pong, data textures, fullscreen tri. Ship two presets: `oscilloscope`,
@@ -566,8 +556,8 @@ Capability tiers, adaptive scaling governor, flash guard, reduced-motion, batter
 ## 14. Risks & Open Questions
 
 | Risk                                                                     | Mitigation                                                                      |
-|--------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| iOS motion permission requires https + gesture, silently fails otherwise | Explicit capability screen that *shows* the denial state and offers VirtualTilt |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| iOS motion permission requires https + gesture, silently fails otherwise | Explicit capability screen that _shows_ the denial state and offers VirtualTilt |
 | Half-float render targets unsupported on old GLES2                       | Pack sim state into RGBA8 (16-bit fixed per channel)                            |
 | Feedback loops + auto-gain can runaway to white                          | Hard clamp in comp pass + luminance guard doubles as a safety net               |
 | Motion event rate varies 10–120Hz across devices                         | Resample to a fixed 60Hz internal tick with interpolation                       |
@@ -593,16 +583,19 @@ v1; revisit if authors hit the wall.
 - **Permalink presets** — full preset (params + shader hash) LZ-compressed into the URL hash for sharing without a
   server.
 - **AudioWorklet** — move flux/onset detection off the main thread for tighter timing.
+
 ---
+
 ## 16. Implementation Status
-| Phase | State | Notes                                                                                  |
-|-------|-------|----------------------------------------------------------------------------------------|
-| 0     | ✅    | `Clock`, `EventBus`, `SignalBus`, no-build ES module graph                              |
-| 1     | ✅    | `AudioEngine`, `Analyser` (32 log bands, peak-hold auto-gain), `BeatDetector`, HUD (`~`) |
-| 2     | ✅    | `Renderer`, `Program` w/ `#include`, ping-pong FBOs, data textures, `oscilloscope`, `spectrum-bars` |
-| 3     | ✅    | Warp pass, `PresetManager`, schema, `tunnel-of-love`, `plasma-storm`; transition is a decay "shatter", not a true crossfade |
-| 4     | ✅    | `MotionEngine`, `Fusion`, `ShakeDetector`, `VirtualTilt`, `gravity-well`, parallax chrome, table mode. `liquid-sand` not yet written |
-| 5     | ⏳    | Placeholder DOM transport in `ui/Controls.js`; `.wsz` `SkinLoader`, bitmap fonts, EQ/Playlist windows pending |
-| 6     | ✅    | Manifest, SW (precache + SWR), install prompt, wake lock, media session, file handlers. `share_target` POST not handled in SW yet |
-| 7     | ✅    | Tiering, adaptive scale governor, luminance flash guard (non-defeatable), reduced-motion baseline. Bloom/LUT and pocket detection pending |
-Known gaps: WebGL1 fallback, `LoudnessMeter` (folded into `Analyser` for now), golden-frame tests, signal replay (`?trace=`).
+
+| Phase                                                                                                                         | State | Notes                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 0                                                                                                                             | ✅    | `Clock`, `EventBus`, `SignalBus`, no-build ES module graph                                                                                |
+| 1                                                                                                                             | ✅    | `AudioEngine`, `Analyser` (32 log bands, peak-hold auto-gain), `BeatDetector`, HUD (`~`)                                                  |
+| 2                                                                                                                             | ✅    | `Renderer`, `Program` w/ `#include`, ping-pong FBOs, data textures, `oscilloscope`, `spectrum-bars`                                       |
+| 3                                                                                                                             | ✅    | Warp pass, `PresetManager`, schema, `tunnel-of-love`, `plasma-storm`; transition is a decay "shatter", not a true crossfade               |
+| 4                                                                                                                             | ✅    | `MotionEngine`, `Fusion`, `ShakeDetector`, `VirtualTilt`, `gravity-well`, parallax chrome, table mode. `liquid-sand` not yet written      |
+| 5                                                                                                                             | ⏳    | Placeholder DOM transport in `ui/Controls.js`; `.wsz` `SkinLoader`, bitmap fonts, EQ/Playlist windows pending                             |
+| 6                                                                                                                             | ✅    | Manifest, SW (precache + SWR), install prompt, wake lock, media session, file handlers. `share_target` POST not handled in SW yet         |
+| 7                                                                                                                             | ✅    | Tiering, adaptive scale governor, luminance flash guard (non-defeatable), reduced-motion baseline. Bloom/LUT and pocket detection pending |
+| Known gaps: WebGL1 fallback, `LoudnessMeter` (folded into `Analyser` for now), golden-frame tests, signal replay (`?trace=`). |

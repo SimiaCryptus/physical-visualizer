@@ -34,13 +34,22 @@ void main() {
  * → temporal low-pass for 2s. Presets cannot opt out.
  */
 class FlashGuard {
-  constructor() { this.last = -1; this.times = []; this.until = 0; this.value = 0; this.lum = 0; }
+  constructor() {
+    this.last = -1;
+    this.times = [];
+    this.until = 0;
+    this.value = 0;
+    this.lum = 0;
+  }
   update(lum, now) {
     this.lum = lum;
     if (this.last >= 0 && Math.abs(lum - this.last) > 0.2) this.times.push(now);
     this.last = lum;
     while (this.times.length && now - this.times[0] > 1000) this.times.shift();
-    if (this.times.length > 3) { this.until = now + 2000; this.times.length = 0; }
+    if (this.times.length > 3) {
+      this.until = now + 2000;
+      this.times.length = 0;
+    }
     const target = now < this.until ? 0.75 : this.baseline;
     this.value += (target - this.value) * 0.2;
   }
@@ -50,21 +59,25 @@ class FlashGuard {
 /** Present pass: chromatic aberration keyed to jerk, flash guard, blit to screen. */
 export class PostChain {
   constructor(gl, mesh, { reducedMotion = false } = {}) {
-    this.gl = gl; this.mesh = mesh;
+    this.gl = gl;
+    this.mesh = mesh;
     this.present = new Program(gl, FULLSCREEN_VERT, PRESENT_FRAG, 'present');
     this.down = new Program(gl, FULLSCREEN_VERT, DOWNSAMPLE_FRAG, 'downsample');
     this.lumRT = new RenderTarget(gl, 8, 8, { filter: gl.NEAREST });
     this.lumBuf = new Uint8Array(8 * 8 * 4);
     this.guard = new FlashGuard();
     this.guard.baseline = reducedMotion ? 0.35 : 0;
-    this.out = null; this.w = 0; this.h = 0;
+    this.out = null;
+    this.w = 0;
+    this.h = 0;
   }
 
   resize(w, h) {
     this.out?.dispose();
     this.out = new PingPong(this.gl, w, h, { filter: this.gl.LINEAR });
     this.out.clear();
-    this.w = w; this.h = h;
+    this.w = w;
+    this.h = h;
   }
 
   run(compTex, { aberration = 0 } = {}) {
@@ -76,12 +89,17 @@ export class PostChain {
     this.mesh.drawFullscreen();
     gl.readPixels(0, 0, 8, 8, gl.RGBA, gl.UNSIGNED_BYTE, this.lumBuf);
     let lum = 0;
-    for (let i = 0; i < 64; i++) lum += 0.2126 * this.lumBuf[i * 4] + 0.7152 * this.lumBuf[i * 4 + 1] + 0.0722 * this.lumBuf[i * 4 + 2];
+    for (let i = 0; i < 64; i++)
+      lum +=
+        0.2126 * this.lumBuf[i * 4] +
+        0.7152 * this.lumBuf[i * 4 + 1] +
+        0.0722 * this.lumBuf[i * 4 + 2];
     this.guard.update(lum / (64 * 255), performance.now());
 
     // 2. Present into out.write (needs out.read for the temporal blend)
     this.out.write.bind();
-    this.present.use()
+    this.present
+      .use()
       .texture('u_comp', compTex, 0)
       .texture('u_prevOut', this.out.read.tex, 1)
       .set('u_guard', this.guard.value)
@@ -91,7 +109,18 @@ export class PostChain {
     // 3. Blit to the canvas
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.out.write.fbo);
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
-    gl.blitFramebuffer(0, 0, this.w, this.h, 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.COLOR_BUFFER_BIT, gl.LINEAR);
+    gl.blitFramebuffer(
+      0,
+      0,
+      this.w,
+      this.h,
+      0,
+      0,
+      gl.drawingBufferWidth,
+      gl.drawingBufferHeight,
+      gl.COLOR_BUFFER_BIT,
+      gl.LINEAR
+    );
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     this.out.swap();
   }

@@ -5,23 +5,41 @@ export function createTexture(gl, w, h, o = {}) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, o.filter ?? gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, o.wrap ?? gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, o.wrap ?? gl.CLAMP_TO_EDGE);
-  gl.texImage2D(gl.TEXTURE_2D, 0, o.internal ?? gl.RGBA8, w, h, 0, o.format ?? gl.RGBA, o.type ?? gl.UNSIGNED_BYTE, o.data ?? null);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    o.internal ?? gl.RGBA8,
+    w,
+    h,
+    0,
+    o.format ?? gl.RGBA,
+    o.type ?? gl.UNSIGNED_BYTE,
+    o.data ?? null
+  );
   return tex;
 }
 
 export class RenderTarget {
   constructor(gl, w, h, o = {}) {
-    this.gl = gl; this.w = w; this.h = h;
+    this.gl = gl;
+    this.w = w;
+    this.h = h;
     this.tex = createTexture(gl, w, h, o);
     this.fbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.tex, 0);
     const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    if (st !== gl.FRAMEBUFFER_COMPLETE) { this.dispose(); throw new Error(`framebuffer incomplete 0x${st.toString(16)}`); }
+    if (st !== gl.FRAMEBUFFER_COMPLETE) {
+      this.dispose();
+      throw new Error(`framebuffer incomplete 0x${st.toString(16)}`);
+    }
   }
 
-  bind() { this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo); this.gl.viewport(0, 0, this.w, this.h); }
+  bind() {
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo);
+    this.gl.viewport(0, 0, this.w, this.h);
+  }
 
   clear(r = 0, g = 0, b = 0, a = 1) {
     this.bind();
@@ -29,7 +47,10 @@ export class RenderTarget {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
   }
 
-  dispose() { this.gl.deleteFramebuffer(this.fbo); this.gl.deleteTexture(this.tex); }
+  dispose() {
+    this.gl.deleteFramebuffer(this.fbo);
+    this.gl.deleteTexture(this.tex);
+  }
 }
 
 /** Two render targets; read from one, write to the other, swap. */
@@ -38,9 +59,21 @@ export class PingPong {
     this.a = new RenderTarget(gl, w, h, o);
     this.b = new RenderTarget(gl, w, h, o);
   }
-  get read() { return this.a; }
-  get write() { return this.b; }
-  swap() { [this.a, this.b] = [this.b, this.a]; }
-  clear() { this.a.clear(); this.b.clear(); }
-  dispose() { this.a.dispose(); this.b.dispose(); }
+  get read() {
+    return this.a;
+  }
+  get write() {
+    return this.b;
+  }
+  swap() {
+    [this.a, this.b] = [this.b, this.a];
+  }
+  clear() {
+    this.a.clear();
+    this.b.clear();
+  }
+  dispose() {
+    this.a.dispose();
+    this.b.dispose();
+  }
 }

@@ -8,14 +8,17 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 /** Permission flow + listener lifecycle. Falls back to VirtualTilt transparently. */
 export class MotionEngine {
   constructor(signals, events, canvas, cap) {
-    this.S = signals; this.E = events; this.cap = cap;
+    this.S = signals;
+    this.E = events;
+    this.cap = cap;
     this.fusion = new Fusion();
     this.shake = new ShakeDetector();
     this.virtual = new VirtualTilt(canvas, signals);
     this.mode = 'none';
     this._gotEvent = false;
     this._neutral = null;
-    this._flatSince = 0; this._table = false;
+    this._flatSince = 0;
+    this._table = false;
     for (const n of ['tiltX', 'tiltY', 'gravX', 'gravY']) signals.define(n, { smooth: 0.05 });
     signals.define('yaw', { smooth: 0.2 });
     signals.define('gravZ', { smooth: 0.05 });
@@ -31,8 +34,10 @@ export class MotionEngine {
   /** Must be invoked synchronously from a click/touch handler (iOS). */
   static async requestPermission() {
     const reqs = [];
-    if (typeof DeviceMotionEvent?.requestPermission === 'function') reqs.push(DeviceMotionEvent.requestPermission());
-    if (typeof DeviceOrientationEvent?.requestPermission === 'function') reqs.push(DeviceOrientationEvent.requestPermission());
+    if (typeof DeviceMotionEvent?.requestPermission === 'function')
+      reqs.push(DeviceMotionEvent.requestPermission());
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function')
+      reqs.push(DeviceOrientationEvent.requestPermission());
     if (!reqs.length) return 'granted';
     try {
       const results = await Promise.all(reqs);
@@ -49,7 +54,9 @@ export class MotionEngine {
     window.addEventListener('devicemotion', this._onMotion);
     window.addEventListener('deviceorientation', this._onOrient);
     this.mode = 'pending';
-    setTimeout(() => { if (!this._gotEvent) this._useVirtual('no events'); }, 1500);
+    setTimeout(() => {
+      if (!this._gotEvent) this._useVirtual('no events');
+    }, 1500);
   }
 
   stop() {
@@ -65,7 +72,9 @@ export class MotionEngine {
     this.E.emit('motion:mode', { mode: 'virtual', reason });
   }
 
-  _angle() { return screen.orientation?.angle ?? window.orientation ?? 0; }
+  _angle() {
+    return screen.orientation?.angle ?? window.orientation ?? 0;
+  }
 
   _onMotion(e) {
     if (!this._gotEvent) {
@@ -78,8 +87,12 @@ export class MotionEngine {
     const f = this.fusion;
     f.update(e.accelerationIncludingGravity, e.acceleration, e.rotationRate, dt, this._angle());
     const S = this.S;
-    S.set('gravX', f.down[0]); S.set('gravY', f.down[1]); S.set('gravZ', f.down[2]);
-    S.set('accelX', f.linScreen[0] / 20); S.set('accelY', f.linScreen[1] / 20); S.set('accelZ', f.linScreen[2] / 20);
+    S.set('gravX', f.down[0]);
+    S.set('gravY', f.down[1]);
+    S.set('gravZ', f.down[2]);
+    S.set('accelX', f.linScreen[0] / 20);
+    S.set('accelY', f.linScreen[1] / 20);
+    S.set('accelZ', f.linScreen[2] / 20);
     S.set('jerk', Math.min(1, f.jerk / 300));
     S.set('spinRate', Math.min(1, f.spinRate / 8));
     S.set('flat', f.flat);
@@ -91,17 +104,23 @@ export class MotionEngine {
 
   _onOrient(e) {
     if (e.beta == null || e.gamma == null) return;
-    this._neutral ??= { beta: e.beta, gamma: e.gamma };          // calibrate to how you hold it
-    const a = -this._angle() * DEG, c = Math.cos(a), s = Math.sin(a);
-    const gx = e.gamma - this._neutral.gamma, gy = e.beta - this._neutral.beta;
-    const tx = gx * c - gy * s, ty = gx * s + gy * c;
+    this._neutral ??= { beta: e.beta, gamma: e.gamma }; // calibrate to how you hold it
+    const a = -this._angle() * DEG,
+      c = Math.cos(a),
+      s = Math.sin(a);
+    const gx = e.gamma - this._neutral.gamma,
+      gy = e.beta - this._neutral.beta;
+    const tx = gx * c - gy * s,
+      ty = gx * s + gy * c;
     this.S.set('tiltX', clamp(tx / 45, -1, 1));
     this.S.set('tiltY', clamp(ty / 45, -1, 1));
     const yaw = e.webkitCompassHeading ?? e.alpha;
-    if (yaw != null) this.S.set('yaw', (yaw / 180) - 1);
+    if (yaw != null) this.S.set('yaw', yaw / 180 - 1);
   }
 
-  recalibrate() { this._neutral = null; }
+  recalibrate() {
+    this._neutral = null;
+  }
 
   update(dt) {
     this.virtual.update(dt);
@@ -110,10 +129,16 @@ export class MotionEngine {
     const now = performance.now();
     if (flat) {
       if (!this._flatSince) this._flatSince = now;
-      if (!this._table && now - this._flatSince > 3000) { this._table = true; this.E.emit('motion:table', true); }
+      if (!this._table && now - this._flatSince > 3000) {
+        this._table = true;
+        this.E.emit('motion:table', true);
+      }
     } else {
       this._flatSince = 0;
-      if (this._table && this.S.get('jerk') > 0.05) { this._table = false; this.E.emit('motion:table', false); }
+      if (this._table && this.S.get('jerk') > 0.05) {
+        this._table = false;
+        this.E.emit('motion:table', false);
+      }
     }
   }
 }

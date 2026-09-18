@@ -14,5 +14,7 @@ export function setupInstall(button) {
     deferred = null;
     button.hidden = true;
   });
-  window.addEventListener('appinstalled', () => { button.hidden = true; });
+  window.addEventListener('appinstalled', () => {
+    button.hidden = true;
+  });
 }

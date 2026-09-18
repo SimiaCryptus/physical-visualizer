@@ -10,7 +10,17 @@ export class SignalBus {
 
   define(name, { smooth = 0, min = -1, max = 1, impulse = false } = {}) {
     if (this._s.has(name)) return this._s.get(name);
-    const sig = { name, value: 0, target: 0, smooth, min, max, impulse, hist: new Float32Array(this.historyLen), head: 0 };
+    const sig = {
+      name,
+      value: 0,
+      target: 0,
+      smooth,
+      min,
+      max,
+      impulse,
+      hist: new Float32Array(this.historyLen),
+      head: 0,
+    };
     this._s.set(name, sig);
     return sig;
   }
@@ -29,8 +39,12 @@ export class SignalBus {
     s.value = s.target = 1;
   }
 
-  get(name) { return this._s.get(name)?.value ?? 0; }
-  has(name) { return this._s.has(name); }
+  get(name) {
+    return this._s.get(name)?.value ?? 0;
+  }
+  has(name) {
+    return this._s.has(name);
+  }
 
   update(dt) {
     for (const s of this._s.values()) {
@@ -46,7 +60,15 @@ export class SignalBus {
     }
   }
 
-  history(name) { return this._s.get(name); }
-  names() { return [...this._s.keys()]; }
-  snapshot() { const o = {}; for (const [k, s] of this._s) o[k] = s.value; return o; }
+  history(name) {
+    return this._s.get(name);
+  }
+  names() {
+    return [...this._s.keys()];
+  }
+  snapshot() {
+    const o = {};
+    for (const [k, s] of this._s) o[k] = s.value;
+    return o;
+  }
 }

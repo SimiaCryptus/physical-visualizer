@@ -9,15 +9,24 @@ export class EventBus {
   }
 
   once(type, fn) {
-    const off = this.on(type, (...a) => { off(); fn(...a); });
+    const off = this.on(type, (...a) => {
+      off();
+      fn(...a);
+    });
     return off;
   }
 
-  off(type, fn) { this.#m.get(type)?.delete(fn); }
+  off(type, fn) {
+    this.#m.get(type)?.delete(fn);
+  }
 
   emit(type, payload) {
     this.#m.get(type)?.forEach((fn) => {
-      try { fn(payload); } catch (e) { console.error(`[EventBus:${type}]`, e); }
+      try {
+        fn(payload);
+      } catch (e) {
+        console.error(`[EventBus:${type}]`, e);
+      }
     });
   }
 }
