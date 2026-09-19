@@ -5,7 +5,7 @@
     "href": "index.html",
     "readme": "README.md",
     "video": "/videos/demo_viz.mp4",
-    "order": 12,
+    "order": 13,
     "section": "games",
     "icon": "PV",
     "launchLabel": "Open Physical Visualizer",
